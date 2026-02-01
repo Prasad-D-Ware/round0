@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ApplicationStatusBadge } from "./application-status-badge"
-import { Calendar, Target, TrendingUp, Eye } from "lucide-react"
+import { Calendar, Target, TrendingUp, Eye, MessageCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export interface MockJobDetail {
   id: string
@@ -64,6 +65,14 @@ interface AttemptCardProps {
 }
 
 export function AttemptCard({ attempt, attemptNumber, onViewDetails }: AttemptCardProps) {
+  const router = useRouter()
+
+  const handleDiscussWithMentor = () => {
+    const interviewSessionId = attempt.interview_session[0]?.id
+    if (interviewSessionId) {
+      router.push(`/mentor?interview_session_id=${interviewSessionId}`)
+    }
+  }
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -184,6 +193,17 @@ export function AttemptCard({ attempt, attemptNumber, onViewDetails }: AttemptCa
             <Eye className="h-4 w-4" />
             View Details
           </Button>
+          {attempt.status === "completed" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDiscussWithMentor}
+              className="flex items-center gap-2"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Discuss with Mentor
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

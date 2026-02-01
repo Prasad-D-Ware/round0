@@ -372,6 +372,218 @@ const createMockJobPosting = async (req: Request, res: Response) => {
 };
 
 
+const getAllMockJobPostings = async (req: Request, res: Response) => {
+	try {
+		const user = req.user;
+
+		if (user.role !== USER_ROLE.admin) {
+			res.status(401).json({
+				success: false,
+				message: "You are not authorised to view mock job postings!",
+			});
+			return;
+		}
+
+		const mock_job_postings = await prisma.job_description.findMany({
+			where: {
+				is_mock: true,
+			},
+			select: {
+				title: true,
+				description: true,
+				id: true,
+				jd_payload: true,
+				created_at: true,
+				_count: {
+					select: {
+						candidate_applications: true,
+					},
+				},
+			},
+			orderBy: {
+				created_at: "desc",
+			},
+		});
+
+		res.status(200).json({
+			success: true,
+			message: "Mock Job Postings!",
+			data: mock_job_postings,
+		});
+		return;
+	} catch (error: any) {
+		console.error("Error while getting all mock job postings", error);
+		res.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+		return;
+	}
+};
+
+const getMockJobPostingById = async (req: Request, res: Response) => {
+	try {
+		const user = req.user;
+		const { job_id } = req.query;
+
+		if (!job_id) {
+			res.status(403).json({
+				success: false,
+				message: "Job ID not Provided!",
+			});
+			return;
+		}
+
+		if (user.role !== USER_ROLE.admin) {
+			res.status(401).json({
+				success: false,
+				message: "You are not authorised!",
+			});
+			return;
+		}
+
+		const job_posting = await prisma.job_description.findFirst({
+			where: {
+				id: job_id as string,
+				is_mock: true,
+			},
+			select: {
+				title: true,
+				description: true,
+				id: true,
+				jd_payload: true,
+				created_at: true,
+				_count: {
+					select: {
+						candidate_applications: true,
+					},
+				},
+			},
+		});
+
+		if (!job_posting) {
+			res.status(404).json({
+				success: false,
+				message: "Mock Job Posting not found!",
+			});
+			return;
+		}
+
+		res.status(200).json({
+			success: true,
+			message: "Mock Job Posting!",
+			data: job_posting,
+		});
+		return;
+	} catch (error: any) {
+		console.error("Error while getting mock job posting", error);
+		res.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+		return;
+	}
+};
+
+const updateMockJobPostingById = async (req: Request, res: Response) => {
+	try {
+		const user = req.user;
+
+		const { job_id, title, description, jd_payload } = req.body;
+
+		if (!job_id) {
+			res.status(403).json({
+				success: false,
+				message: "Job ID not Provided!",
+			});
+			return;
+		}
+
+		if (user.role !== USER_ROLE.admin) {
+			res.status(401).json({
+				success: false,
+				message: "You are not authorised to update mock job posting!",
+			});
+			return;
+		}
+
+		const job_posting = await prisma.job_description.update({
+			where: {
+				id: job_id as string,
+				is_mock: true,
+			},
+			data: {
+				title: title,
+				description: description,
+				jd_payload: jd_payload,
+			},
+		});
+
+		if (!job_posting) {
+			res.status(401).json({
+				success: false,
+				message: "Error updating Mock Job Posting",
+			});
+			return;
+		}
+
+		res.status(200).json({
+			success: true,
+			message: "Mock Job Posting updated Successfully!",
+		});
+		return;
+	} catch (error: any) {
+		console.error("Error while updating mock job posting", error);
+		res.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+	}
+};
+
+const deleteMockJobPostingById = async (req: Request, res: Response) => {
+	try {
+		const user = req.user;
+
+		const { job_id } = req.query;
+
+		if (!job_id) {
+			res.status(403).json({
+				success: false,
+				message: "Job ID not Provided!",
+			});
+			return;
+		}
+
+		if (user.role !== USER_ROLE.admin) {
+			res.status(401).json({
+				success: false,
+				message: "You are not authorised to delete mock job posting!",
+			});
+			return;
+		}
+
+		await prisma.job_description.delete({
+			where: {
+				id: job_id as string,
+				is_mock: true,
+			},
+		});
+
+		res.status(200).json({
+			success: true,
+			message: "Mock Job Posting deleted Successfully!",
+		});
+		return;
+	} catch (error: any) {
+		console.error("Error while deleting mock job posting", error);
+		res.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+	}
+};
+
 const jobPostingController = {
 	createJobPosting,
 	getAllJobPosting,
@@ -379,6 +591,10 @@ const jobPostingController = {
 	updateJobPostingById,
 	deleteJobPostingById,
 	createMockJobPosting,
+	getAllMockJobPostings,
+	getMockJobPostingById,
+	updateMockJobPostingById,
+	deleteMockJobPostingById,
 };
 
 export default jobPostingController;

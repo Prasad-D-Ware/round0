@@ -18,11 +18,6 @@
       "persistent": true,
       "env": ["PORT"]
     },
-    "recruiter-dashboard#dev": {
-      "cache": false,
-      "persistent": true,
-      "env": ["PORT"]
-    },
     "admin-dashboard#dev": {
       "cache": false,
       "persistent": true,

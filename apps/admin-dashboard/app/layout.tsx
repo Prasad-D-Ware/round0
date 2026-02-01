@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZeroCV-Admin",
-  description: "Dashboard for ZeroCV Admins",
+  title: "Round0-Admin",
+  description: "Dashboard for Round0 Admins",
 };
 
 export default function RootLayout({

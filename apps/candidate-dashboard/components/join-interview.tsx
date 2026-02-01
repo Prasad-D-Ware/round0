@@ -25,6 +25,7 @@ import { ExcalidrawRef } from "./excalidraw-wrapper";
 import { evaluateCanvas } from "@/api/operations/interview-api";
 import { toast } from "sonner";
 import CodeIDE from "./code-ide";
+import { useInterviewTokenPayloadStore } from "@/stores/interview-token-payload-store";
 
 // Dynamic import for Excalidraw to handle SSR
 const ExcalidrawWrapper = dynamic(() => import("./excalidraw-wrapper"), {
@@ -78,6 +79,11 @@ const JoinInterview = ({
 		finishFeedbackAndEndInterview,
 	} = useConversationContext();
 
+	const { interview_token_payload } = useInterviewTokenPayloadStore();
+	const availableTools: string[] = interview_token_payload?.interview_tools || ["code_editor", "whiteboard"];
+	const hasCodeEditor = availableTools.includes("code_editor");
+	const hasWhiteboard = availableTools.includes("whiteboard");
+
 	const [showTranscript, setShowTranscript] = useState(true);
 	const [microphoneMode, setMicrophoneMode] = useState<
 		"push-to-talk" | "continuous"
@@ -106,22 +112,26 @@ const JoinInterview = ({
 		if (currentTool) {
 			switch (currentTool.tool) {
 				case "code_editor":
-					console.log('🔧 Opening code editor...');
-					setShowCodeEditor(true);
-					setShowExcalidraw(false); // Close excalidraw when opening code editor
+					if (hasCodeEditor) {
+						console.log('🔧 Opening code editor...');
+						setShowCodeEditor(true);
+						setShowExcalidraw(false);
+					}
 					break;
 				case "whiteboard":
 				case "system_design_evaluator":
-					console.log('🎨 Opening system design whiteboard...');
-					setShowExcalidraw(true);
-					setShowCodeEditor(false); // Close code editor when opening whiteboard
+					if (hasWhiteboard) {
+						console.log('🎨 Opening system design whiteboard...');
+						setShowExcalidraw(true);
+						setShowCodeEditor(false);
+					}
 					break;
 				default:
 					console.log('❓ Unknown tool:', currentTool.tool);
 					break;
 			}
 		}
-	}, [currentTool]);
+	}, [currentTool, hasCodeEditor, hasWhiteboard]);
 
 	// Add a new useEffect to handle automatic interview completion
 	useEffect(() => {
@@ -295,12 +305,12 @@ const JoinInterview = ({
 					<div className="flex-[4] min-h-0">
 						<div className="relative bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg overflow-hidden border h-full">
 							{/* Main content area - AI Avatar OR Excalidraw OR CodeIDE */}
-							{showCodeEditor ? (
+							{showCodeEditor && hasCodeEditor ? (
 								/* CodeIDE replaces the AI avatar area */
 								<div className="w-full h-full">
 									<CodeIDE tool={currentTool}/>
 								</div>
-							) : showExcalidraw ? (
+							) : showExcalidraw && hasWhiteboard ? (
 								/* Excalidraw replaces only the AI avatar area */
 								<div className="w-full h-full">
 									<ExcalidrawWrapper
@@ -318,7 +328,7 @@ const JoinInterview = ({
 											<div className="text-4xl">🤖</div>
 										</div>
 										<h3 className="text-lg font-semibold text-primary">
-											ZeroCV AI Interviewer
+											Round0 AI Interviewer
 										</h3>
 										{/* <p className="text-sm text-muted-foreground mt-2">
 											{status === "connected"
@@ -462,25 +472,29 @@ const JoinInterview = ({
 								<Globe className="w-6 h-6" />
 							</Button>
 
-							<Button
-								variant={showExcalidraw ? "default" : "outline"}
-								onClick={handleExcalidrawToggle}
-								size="lg"
-								className="rounded-full w-14 h-14 p-0"
-								disabled={isUploading}
-							>
-								<Server className="w-6 h-6" />
-							</Button>
+							{hasWhiteboard && (
+								<Button
+									variant={showExcalidraw ? "default" : "outline"}
+									onClick={handleExcalidrawToggle}
+									size="lg"
+									className="rounded-full w-14 h-14 p-0"
+									disabled={isUploading}
+								>
+									<Server className="w-6 h-6" />
+								</Button>
+							)}
 
-							<Button
-								variant={showCodeEditor ? "default" : "outline"}
-								onClick={handleCodeEditorToggle}
-								size="lg"
-								className="rounded-full w-14 h-14 p-0"
-								disabled={isUploading}
-							>
-								<CodeXml className="w-6 h-6" />
-							</Button>
+							{hasCodeEditor && (
+								<Button
+									variant={showCodeEditor ? "default" : "outline"}
+									onClick={handleCodeEditorToggle}
+									size="lg"
+									className="rounded-full w-14 h-14 p-0"
+									disabled={isUploading}
+								>
+									<CodeXml className="w-6 h-6" />
+								</Button>
+							)}
 
 							<Button
 								variant="outline"

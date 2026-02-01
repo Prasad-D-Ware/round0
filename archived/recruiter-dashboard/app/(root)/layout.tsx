@@ -3,7 +3,7 @@ import "../globals.css";
 
 
 export const metadata: Metadata = {
-    title: "ZeroCV Recruiter",
+    title: "Round0 Recruiter",
     description: "Recruiter Dashboard",
 };
 

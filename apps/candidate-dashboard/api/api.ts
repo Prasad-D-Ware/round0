@@ -33,6 +33,7 @@ export const mockInterviewApi = {
     GET_MOCK_INTERVIEW_DETAILS_AND_ATTEMPTS: `${BASE_URL}mockinterview/get_mockinterview_details_and_attempts`,
     START_MOCK_INTERVIEW: `${BASE_URL}mockinterview/start_mockinterview`,
     GET_REPORT: `${BASE_URL}mockinterview/get_report`,
+    GET_CANDIDATE_STATS: `${BASE_URL}mockinterview/candidate_stats`,
 }
 
 export const mentorApi = {

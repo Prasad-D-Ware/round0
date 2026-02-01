@@ -86,7 +86,7 @@ const JobListing = () => {
                 <div className="container mx-auto px-4 py-6">
                     <div className="flex items-center gap-3 mb-4">
                         <Briefcase className="h-8 w-8 text-primary" />
-                        <h1 className="text-3xl font-bold">ZeroCV Recruiter</h1>
+                        <h1 className="text-3xl font-bold">Round0 Recruiter</h1>
                     </div>
                     <p className="text-muted-foreground">
                         Check the list of all jobs you have posted as a

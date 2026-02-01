@@ -23,9 +23,10 @@ const testConnection = async (req: Request, res: Response) => {
 const createMentorSession = async (req: Request, res: Response) => {
     try {
         const { id: candidate_id } = req.user;
+        const { title, interview_session_id } = req.body;
 
         const mentorSession =
-            await mentorService.createMentorSession(candidate_id);
+            await mentorService.createMentorSession(candidate_id, title, interview_session_id);
 
         if (!mentorSession) {
             res.status(400).json({

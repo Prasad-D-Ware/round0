@@ -91,7 +91,7 @@ export default function JobListings() {
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center gap-3 mb-4">
               <Briefcase className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold">ZeroCV Admin Dashboard</h1>
+              <h1 className="text-3xl font-bold">Round0 Admin Dashboard</h1>
             </div>
             <p className="text-muted-foreground">Discover your next career opportunity from our curated job listings</p>
           </div>
