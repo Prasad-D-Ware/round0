@@ -2,7 +2,13 @@ import type { Request, Response } from "express";
 import prisma from "../lib/prisma";
 import { INTERVIEW_ROUND_TYPE, JOB_APPLICATION_STATUS, USER_ROLE } from "@prisma/client";
 import { createInterviewToken } from "../lib/interview-token";
-import { getRoundSpecificInstructions, jobSpecificInstructions } from "../lib/round-specific-instruction";
+import {
+	getRoundSpecificInstructions,
+	jobSpecificInstructions,
+	getToolsForRoleCategory,
+	getDifficultyInstructions,
+} from "../lib/round-specific-instruction";
+import { generateMockInterviewJD as generateMockInterviewJDService } from "../services/mockinterview-jd.service";
 
 const getMockInterviews = async (req: Request, res: Response) => {
 	try {
@@ -54,6 +60,36 @@ const getMockInterviews = async (req: Request, res: Response) => {
 		return;
 	}
 }
+
+const generateMockInterviewJD = async (req: Request, res: Response) => {
+	try {
+		const { title, description } = req.body;
+
+		if (!title || !description) {
+			res.status(400).json({
+				success: false,
+				message: "Both title and description are required",
+			});
+			return;
+		}
+
+		const jd = await generateMockInterviewJDService(title, description);
+
+		res.status(200).json({
+			success: true,
+			message: "Mock interview JD generated successfully",
+			data: jd,
+		});
+		return;
+	} catch (error) {
+		console.error("Error generating mock interview JD:", error);
+		res.status(500).json({
+			success: false,
+			message: "Failed to generate mock interview description",
+		});
+		return;
+	}
+};
 
 const startMockInterview = async (req: Request, res: Response) => {
 	const { mock_job_id } = req.body; 
@@ -112,6 +148,11 @@ const startMockInterview = async (req: Request, res: Response) => {
 
 		// 4. generate interview token and return 
 
+		const jdPayload = application.job_description.jd_payload as any;
+		const roleCategory = jdPayload?.role_category || "engineering";
+		const difficultyLevel = jdPayload?.difficulty_level || "mid";
+		const interviewTools = jdPayload?.interview_tools || getToolsForRoleCategory(roleCategory);
+
 		const tokenPayload = {
 			candidate_id: application.candidate_id,
 			recruiter_id: application.job_description.recruiter_id,
@@ -126,11 +167,15 @@ const startMockInterview = async (req: Request, res: Response) => {
 			candidate_name: application.candidate.name,
 			recruiter_name: application.job_description.recruiter.name,
 			description: application.job_description.description,
-			jd_skills: (application.job_description.jd_payload as any)?.skills || "",
-			jd_experience: (application.job_description.jd_payload as any)?.experience || "",
-			jd_location: (application.job_description.jd_payload as any)?.location || "",
+			jd_skills: jdPayload?.skills || "",
+			jd_experience: jdPayload?.experience || "",
+			jd_location: jdPayload?.location || "",
+			interview_tools: interviewTools,
+			role_category: roleCategory,
+			difficulty_level: difficultyLevel,
 			round_specific_instructions: getRoundSpecificInstructions(round.round_type as INTERVIEW_ROUND_TYPE),
 			job_specific_instructions: jobSpecificInstructions(application.job_description.title),
+			difficulty_instructions: getDifficultyInstructions(difficultyLevel),
 		}
 
 		const interview_token = createInterviewToken(tokenPayload, "24h");
@@ -335,10 +380,266 @@ const getMyReports = async (req: Request, res: Response) => {
 	}
 }
 
+const getCandidateMockInterviewStats = async (req: Request, res: Response) => {
+	const { id: candidate_id } = req.user;
+
+	try {
+		// Get all mock interview attempts
+		const attempts = await prisma.job_application.findMany({
+			where: {
+				candidate_id: candidate_id,
+				job_description: {
+					is_mock: true,
+				},
+			},
+			select: {
+				id: true,
+				status: true,
+				created_at: true,
+				job_description: {
+					select: {
+						title: true,
+						jd_payload: true,
+					},
+				},
+				interview_session: {
+					select: {
+						interview_round: {
+							select: {
+								zero_score: true,
+								ai_summary: true,
+								round_type: true,
+							},
+						},
+					},
+				},
+			},
+			orderBy: {
+				created_at: "desc",
+			},
+		});
+
+		const totalAttempts = attempts.length;
+		const completedAttempts = attempts.filter(
+			(a) => a.status === JOB_APPLICATION_STATUS.completed
+		);
+
+		// Calculate average score
+		let totalScore = 0;
+		let scoredCount = 0;
+		for (const attempt of completedAttempts) {
+			for (const session of attempt.interview_session) {
+				for (const round of session.interview_round) {
+					if (round.zero_score !== null && round.zero_score !== undefined) {
+						totalScore += Number(round.zero_score);
+						scoredCount++;
+					}
+				}
+			}
+		}
+		const averageScore = scoredCount > 0 ? Math.round(totalScore / scoredCount) : 0;
+
+		// Recent attempts (top 5)
+		const recentAttempts = attempts.slice(0, 5).map((a) => ({
+			id: a.id,
+			title: a.job_description.title,
+			status: a.status,
+			created_at: a.created_at,
+			role_category: (a.job_description.jd_payload as any)?.role_category || "other",
+			score: a.interview_session?.[0]?.interview_round?.[0]?.zero_score ?? null,
+		}));
+
+		res.status(200).json({
+			success: true,
+			message: "Candidate mock interview stats",
+			data: {
+				totalAttempts,
+				completedAttempts: completedAttempts.length,
+				averageScore,
+				recentAttempts,
+			},
+		});
+		return;
+	} catch (error) {
+		console.error("Error getting candidate stats:", error);
+		res.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+		return;
+	}
+};
+
+const getMockInterviewAnalytics = async (req: Request, res: Response) => {
+	try {
+		const user = req.user;
+
+		if (user.role !== USER_ROLE.admin) {
+			res.status(401).json({
+				success: false,
+				message: "You are not authorised!",
+			});
+			return;
+		}
+
+		// Total mock interviews
+		const totalMockInterviews = await prisma.job_description.count({
+			where: { is_mock: true },
+		});
+
+		// Total attempts
+		const totalAttempts = await prisma.job_application.count({
+			where: {
+				job_description: { is_mock: true },
+			},
+		});
+
+		// Completed attempts
+		const completedAttempts = await prisma.job_application.count({
+			where: {
+				job_description: { is_mock: true },
+				status: JOB_APPLICATION_STATUS.completed,
+			},
+		});
+
+		// Get all scored rounds for average
+		const scoredRounds = await prisma.interview_round.findMany({
+			where: {
+				session: {
+					application: {
+						job_description: { is_mock: true },
+						status: JOB_APPLICATION_STATUS.completed,
+					},
+				},
+				zero_score: { not: null },
+			},
+			select: {
+				zero_score: true,
+				session: {
+					select: {
+						application: {
+							select: {
+								job_description: {
+									select: {
+										jd_payload: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		});
+
+		let totalScore = 0;
+		const roleScores: Record<string, { total: number; count: number }> = {};
+
+		for (const round of scoredRounds) {
+			const score = Number(round.zero_score);
+			totalScore += score;
+			const roleCategory =
+				(round.session.application.job_description.jd_payload as any)?.role_category || "other";
+			if (!roleScores[roleCategory]) {
+				roleScores[roleCategory] = { total: 0, count: 0 };
+			}
+			roleScores[roleCategory].total += score;
+			roleScores[roleCategory].count++;
+		}
+
+		const averageScore =
+			scoredRounds.length > 0 ? Math.round(totalScore / scoredRounds.length) : 0;
+
+		const rolePerformance = Object.entries(roleScores).map(([role, data]) => ({
+			role,
+			averageScore: Math.round(data.total / data.count),
+			attempts: data.count,
+		}));
+
+		// Top candidates
+		const candidateScores = await prisma.job_application.findMany({
+			where: {
+				job_description: { is_mock: true },
+				status: JOB_APPLICATION_STATUS.completed,
+			},
+			select: {
+				candidate: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
+				interview_session: {
+					select: {
+						interview_round: {
+							select: {
+								zero_score: true,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		const candidateMap: Record<string, { name: string; totalScore: number; count: number }> = {};
+		for (const app of candidateScores) {
+			const cid = app.candidate.id;
+			if (!candidateMap[cid]) {
+				candidateMap[cid] = { name: app.candidate.name, totalScore: 0, count: 0 };
+			}
+			for (const session of app.interview_session) {
+				for (const round of session.interview_round) {
+					if (round.zero_score !== null) {
+						candidateMap[cid].totalScore += Number(round.zero_score);
+						candidateMap[cid].count++;
+					}
+				}
+			}
+		}
+
+		const leaderboard = Object.entries(candidateMap)
+			.map(([id, data]) => ({
+				id,
+				name: data.name,
+				averageScore: data.count > 0 ? Math.round(data.totalScore / data.count) : 0,
+				totalAttempts: data.count,
+			}))
+			.sort((a, b) => b.averageScore - a.averageScore)
+			.slice(0, 10);
+
+		res.status(200).json({
+			success: true,
+			message: "Mock interview analytics",
+			data: {
+				totalMockInterviews,
+				totalAttempts,
+				completedAttempts,
+				averageScore,
+				completionRate:
+					totalAttempts > 0
+						? Math.round((completedAttempts / totalAttempts) * 100)
+						: 0,
+				rolePerformance,
+				leaderboard,
+			},
+		});
+		return;
+	} catch (error) {
+		console.error("Error getting analytics:", error);
+		res.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+		return;
+	}
+};
+
 export const mockInterviewController = {
 	getMockInterviews,
 	startMockInterview,
 	getMockInterviewDetailsAndAttempts,
 	getReport,
 	getMyReports,
+	getCandidateMockInterviewStats,
+	getMockInterviewAnalytics,
+	generateMockInterviewJD,
 }

@@ -13,12 +13,10 @@ const PORT = process.env.PORT || 8080;
 const app = express();
 
 const allowedOrigins = [
-	"http://localhost:3000",
-	"http://localhost:3001",
-	"http://localhost:3002",
-	"https://admin.zerocv.ai",
-	"https://recruiter.zerocv.ai",
-	"https://candidate.zerocv.ai",
+	"http://localhost:3001", // admin-dashboard
+	"http://localhost:3002", // candidate-dashboard
+	"https://admin.Round0.ai",
+	"https://candidate.Round0.ai",
 ];
 
 app.use(express.json({ limit: "50mb" }));

@@ -56,7 +56,7 @@ class Mentor {
             };
         });
 
-        const systemPrompt = `You are ZeroCV AI Career Coach - an expert AI mentor specializing in technical interview preparation, career development, and personalized skill improvement for software engineers and tech professionals.
+        const systemPrompt = `You are Round0 AI Career Coach - an expert AI mentor specializing in technical interview preparation, career development, and personalized skill improvement for software engineers and tech professionals.
 
 ## YOUR EXPERTISE & PERSONALITY
 - **Senior Technical Interviewer**: 15+ years of experience across FAANG, startups, and scale-ups
@@ -364,11 +364,12 @@ Begin your coaching session by gathering comprehensive user insights through the
         }
     }
 
-    async createMentorSession(user_id: string, title?: string) {
+    async createMentorSession(user_id: string, title?: string, interview_session_id?: string) {
         return await prisma.mentor_session.create({
             data: {
                 candidate_id: user_id,
-                title: title || "New Coaching Session "
+                title: title || "New Coaching Session ",
+                interview_session_id: interview_session_id || null
             }
         });
     }

@@ -40,11 +40,15 @@ export interface GetMessagesResponse {
     data: MentorMessage[];
 }
 
-export const createMentorSession = async (token: string): Promise<CreateSessionResponse> => {
+export const createMentorSession = async (
+    token: string,
+    title?: string,
+    interview_session_id?: string
+): Promise<CreateSessionResponse> => {
     const response = await apiConnector(
         "POST",
         mentorApi.CREATE_SESSION,
-        {},
+        { title, interview_session_id },
         { Authorization: token },
         null,
         null

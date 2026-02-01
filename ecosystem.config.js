@@ -9,14 +9,6 @@ module.exports = {
       autorestart: true,
     },
     {
-      name: 'recruiter-dashboard',
-      script: '../../node_modules/.bin/next',
-      args: ['start', '-p', '3000'],
-      cwd: 'apps/recruiter-dashboard',
-      watch: false,
-      autorestart: true,
-    },
-    {
       name: 'candidate-dashboard',
       script: '../../node_modules/.bin/next',
       args: ['start', '-p', '3002'],

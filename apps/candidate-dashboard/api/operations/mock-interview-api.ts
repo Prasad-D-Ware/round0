@@ -50,3 +50,16 @@ export const getReport = async (token: string, round_id: string) => {
 
     return response?.data;
 }
+
+export const getCandidateMockInterviewStats = async (token: string) => {
+    const response = await apiConnector(
+        "GET",
+        mockInterviewApi.GET_CANDIDATE_STATS,
+        null,
+        { Authorization: token },
+        null,
+        null
+    )
+
+    return response?.data;
+}

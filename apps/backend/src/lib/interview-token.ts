@@ -18,6 +18,9 @@ export interface InterviewTokenPayload {
     description: string;
     jd_skills: string;
     jd_experience: string;
+    interview_tools?: string[];
+    role_category?: string;
+    difficulty_level?: string;
 }
 
 export const createInterviewToken = (payload: InterviewTokenPayload, expiresIn: string = '24h'): string => {

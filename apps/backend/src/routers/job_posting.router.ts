@@ -15,4 +15,12 @@ router.post("/delete_job_by_id", authenticateUser as RequestHandler, jobPostingC
 
 router.post("/create_mock_job", authenticateUser as RequestHandler, jobPostingController.createMockJobPosting);
 
+router.get("/get_all_mock_jobs", authenticateUser as RequestHandler, jobPostingController.getAllMockJobPostings);
+
+router.get("/get_mock_job_by_id", authenticateUser as RequestHandler, jobPostingController.getMockJobPostingById);
+
+router.put("/update_mock_job_by_id", authenticateUser as RequestHandler, jobPostingController.updateMockJobPostingById);
+
+router.delete("/delete_mock_job_by_id", authenticateUser as RequestHandler, jobPostingController.deleteMockJobPostingById);
+
 export default router;

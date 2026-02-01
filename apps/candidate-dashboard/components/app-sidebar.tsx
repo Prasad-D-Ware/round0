@@ -111,7 +111,7 @@ export function AppSidebar() {
 		</SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>ZeroCV Candidate</SidebarGroupLabel>
+          <SidebarGroupLabel>Round0 Candidate</SidebarGroupLabel>
           <SidebarGroupContent className="mt-4">
             <SidebarMenu className="flex flex-col gap-4">
               {items.map((item) => {

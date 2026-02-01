@@ -23,6 +23,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { MockInterviewStats } from "@/components/mock-interview-stats";
 
 const DashboardPage = () => {
   const { token, user } = useAuthStore();
@@ -385,6 +386,9 @@ const DashboardPage = () => {
 
           {/* Quick Actions */}
           <div className="space-y-6">
+            {/* Mock Interview Stats */}
+            <MockInterviewStats />
+
             <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
@@ -396,6 +400,13 @@ const DashboardPage = () => {
                   onClick={() => router.push("/jobs")}
                 >
                   Browse Jobs
+                </Button>
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                  onClick={() => router.push("/mockinterview")}
+                >
+                  Practice Mock Interviews
                 </Button>
                 <Button
                   className="w-full justify-start"

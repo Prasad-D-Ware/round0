@@ -41,7 +41,7 @@ class EmailService {
                 DefaultTemplateData: JSON.stringify({
                     candidateName: 'Candidate',
                     jobTitle: 'Position',
-                    companyName: 'ZeroCV',
+                    companyName: 'Round0',
                     interviewLink: '#'
                 }),
                 Destinations: bulkDestinations,
@@ -80,7 +80,7 @@ class EmailService {
                         </a>
                     </div>
                     <p><strong>Important:</strong> This link is valid for 24 hours from the time you receive this email.</p>
-                    <p>Best regards,<br>ZeroCV Team</p>
+                    <p>Best regards,<br>Round0 Team</p>
                 </div>
             `;
 

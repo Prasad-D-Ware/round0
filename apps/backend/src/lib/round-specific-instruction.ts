@@ -145,3 +145,57 @@ BUSINESS ANALYST SPECIFIC INSTRUCTIONS:
 			return "";
 	}
 }
+
+export const getToolsForRoleCategory = (category: string): string[] => {
+	switch (category) {
+		case "engineering":
+			return ["code_editor", "whiteboard"];
+		case "data_analytics":
+			return ["code_editor", "whiteboard"];
+		case "business":
+			return ["whiteboard", "file_upload"];
+		case "other":
+			return ["whiteboard", "file_upload"];
+		default:
+			return ["code_editor", "whiteboard"];
+	}
+};
+
+export const getDifficultyInstructions = (level: string): string => {
+	switch (level) {
+		case "entry":
+			return `
+DIFFICULTY LEVEL: ENTRY
+- Ask foundational and basic questions appropriate for junior-level candidates
+- Focus on fundamental concepts and simple problem-solving
+- Provide hints if the candidate struggles significantly
+- Evaluate based on understanding of basics and learning potential
+- Code problems should be easy to moderate (e.g., array manipulation, basic string operations)`;
+		case "mid":
+			return `
+DIFFICULTY LEVEL: MID
+- Ask intermediate questions appropriate for mid-level professionals
+- Test practical application of concepts and real-world experience
+- Expect reasonable problem-solving speed and code quality
+- Include questions about trade-offs and design decisions
+- Code problems should be moderate (e.g., data structure usage, algorithm optimization)`;
+		case "senior":
+			return `
+DIFFICULTY LEVEL: SENIOR
+- Ask advanced questions appropriate for senior-level professionals
+- Test deep understanding of architecture and system design
+- Expect strong opinions backed by experience
+- Include questions about mentoring, technical leadership, and complex problem-solving
+- Code problems should be challenging (e.g., complex algorithms, concurrent programming)`;
+		case "expert":
+			return `
+DIFFICULTY LEVEL: EXPERT
+- Ask expert-level questions appropriate for staff/principal engineers
+- Focus on large-scale system design, organizational impact, and technical strategy
+- Expect innovative solutions and deep expertise
+- Include questions about cross-team collaboration and technical vision
+- Code problems should be very challenging (e.g., distributed systems, performance optimization)`;
+		default:
+			return "";
+	}
+};

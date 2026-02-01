@@ -1,5 +1,5 @@
 "use client";
-import { BarChart, Briefcase, Calendar, Home, Inbox, Search, Settings, ShieldUser, Users } from "lucide-react"
+import { BarChart, Briefcase, Calendar, ClipboardList, Home, Inbox, Search, Settings, ShieldUser, Users, TrendingUp } from "lucide-react"
 
 import {
   Sidebar,
@@ -22,6 +22,16 @@ const items = [
     title: "Home",
     url: "/dashboard",
     icon: Home,
+  },
+  {
+    title: "Mock Interviews",
+    url: "/mockinterviews",
+    icon: ClipboardList,
+  },
+  {
+    title: "Analytics",
+    url: "/analytics",
+    icon: TrendingUp,
   },
   {
     title: "Jobs",
@@ -62,7 +72,7 @@ export function AppSidebar() {
 		</SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>ZeroCV Admin</SidebarGroupLabel>
+          <SidebarGroupLabel>Round0 Admin</SidebarGroupLabel>
           <SidebarGroupContent className="mt-4">
             <SidebarMenu className="flex flex-col gap-4">
               {items.map((item) => (
