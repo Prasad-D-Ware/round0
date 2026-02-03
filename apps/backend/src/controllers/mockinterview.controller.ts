@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import prisma from "../lib/prisma";
-import { INTERVIEW_ROUND_TYPE, JOB_APPLICATION_STATUS, USER_ROLE } from "@prisma/client";
+import { INTERVIEW_ROUND_TYPE, JOB_APPLICATION_STATUS, USER_ROLE } from "../../generated/enums";
 import { createInterviewToken } from "../lib/interview-token";
 import {
 	getRoundSpecificInstructions,

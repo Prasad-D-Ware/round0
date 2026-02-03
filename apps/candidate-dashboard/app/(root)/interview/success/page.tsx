@@ -12,10 +12,10 @@ export default function InterviewSuccessPage() {
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-background">
+		<div className="min-h-screen flex items-center justify-center app-surface">
 			<div className="max-w-md w-full mx-auto text-center space-y-6 p-8">
 				<div className="flex justify-center">
-					<CheckCircle className="h-16 w-16 text-green-500" />
+					<CheckCircle className="h-16 w-16 text-primary" />
 				</div>
 				
 				<div className="space-y-2">

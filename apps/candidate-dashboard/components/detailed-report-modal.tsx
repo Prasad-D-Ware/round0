@@ -87,23 +87,25 @@ const DetailedReportModal = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-[95vw] sm:max-w-6xl w-full max-h-[95vh] h-full overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-6xl w-full max-h-[95vh] h-full overflow-y-auto p-0">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold">
+                    <div className="px-6 pt-6">
+                    <DialogTitle className="text-xl font-semibold tracking-tight">
                         Mock Interview Assessment Report
                     </DialogTitle>
                     <DialogDescription>
                         Your detailed performance analysis and feedback from this mock interview attempt.
                     </DialogDescription>
+                    </div>
                 </DialogHeader>
 
                 {loading ? (
                     <div className="flex justify-center items-center h-64">
-                        <Loader2 className="animate-spin h-8 w-8" />
-                        <span className="ml-2">Loading your report...</span>
+                        <Loader2 className="animate-spin h-8 w-8 text-muted-foreground" />
+                        <span className="ml-2 text-sm text-muted-foreground">Loading your report...</span>
                     </div>
                 ) : reportData ? (
-                    <div className="space-y-6">
+                    <div className="space-y-6 px-6 pb-6">
                         {/* Overall Score Section */}
                         <Card>
                             <CardHeader>
@@ -169,8 +171,8 @@ const DetailedReportModal = ({
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <p className="text-blue-900 leading-relaxed">
+                                <div className="rounded-xl border border-border/60 bg-primary/5 p-4">
+                                    <p className="text-sm leading-relaxed text-foreground">
                                         {reportData.ai_summary}
                                     </p>
                                 </div>
@@ -191,15 +193,15 @@ const DetailedReportModal = ({
                                         {Object.entries(reportDataDetails).filter(([key]) => 
                                             key !== 'comments' && key !== 'overall_score'
                                         ).map(([key, value]) => (
-                                            <div key={key} className="border border-gray-200 rounded-lg p-4 bg-white">
+                                            <div key={key} className="rounded-2xl border border-border/60 bg-card/40 p-4">
                                                 <div className="flex items-center space-x-2 mb-3">
                                                     {componentIcons[key as keyof typeof componentIcons]}
-                                                    <h4 className="font-semibold text-lg capitalize text-gray-800">
+                                                    <h4 className="font-semibold text-base capitalize">
                                                         {key.replace('_', ' ')}
                                                     </h4>
                                                 </div>
-                                                <div className="bg-gray-50 rounded-md p-3 border-l-4 border-blue-500">
-                                                    <p className="text-gray-700 leading-relaxed">
+                                                <div className="rounded-xl bg-muted/30 p-3 border-l-4 border-primary/50">
+                                                    <p className="text-sm leading-relaxed text-foreground">
                                                         {value as string}
                                                     </p>
                                                 </div>
@@ -208,9 +210,9 @@ const DetailedReportModal = ({
 
                                         {/* Comments */}
                                         {reportDataDetails.comments && (
-                                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                                                <h4 className="font-semibold text-amber-800 mb-2">Additional Feedback</h4>
-                                                <p className="text-amber-900 leading-relaxed">
+                                            <div className="rounded-2xl border border-border/60 bg-accent/30 p-4">
+                                                <h4 className="font-semibold mb-2">Additional Feedback</h4>
+                                                <p className="text-sm leading-relaxed text-foreground">
                                                     {reportDataDetails.comments}
                                                 </p>
                                             </div>

@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Filter, Play, Clock, Target, Loader2 } from "lucide-react";
+import { Search, Play, Loader2 } from "lucide-react";
 import { getMockInterviews } from "@/api/operations/mock-interview-api";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
 import { useRouter } from "next/navigation";
+import { PageShell } from "@/components/layout/page-shell";
 
 // Sample data from your API response
 // const mockInterviewsData: MockInterview[] = [
@@ -181,137 +182,89 @@ export default function MockInterviewsListing() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen w-full">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-white">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Play className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Mock Interviews</h1>
-          </div>
-          <p className="text-muted-foreground">
-            Practice with realistic interview scenarios and get expert feedback
-          </p>
-        </div>
-      </div>
+    <PageShell
+      title="Mock Interviews"
+      description="Practice with realistic scenarios and get feedback."
+      size="lg"
+    >
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Dynamic Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Target className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Total Interviews</span>
-              </div>
-              <p className="text-2xl font-bold">{stats.total}</p>
+            <CardContent className="pt-4 pb-3 px-4">
+              <p className="text-xl font-semibold">{stats.total}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Total</p>
             </CardContent>
           </Card>
-
-          {topTypes.map(([type, count], index) => {
-            const colors = [
-              { icon: "text-blue-600", text: "text-blue-600" },
-              { icon: "text-purple-600", text: "text-purple-600" },
-              { icon: "text-green-600", text: "text-green-600" },
-            ];
-            const color = colors[index] || colors[0];
-
-            return (
-              <Card key={type}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Play className={`h-4 w-4 ${color.icon}`} />
-                    <span className="text-sm font-medium">{type}</span>
-                  </div>
-                  <p className={`text-2xl font-bold ${color.text}`}>{count}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
-
+          {topTypes.map(([type, count]) => (
+            <Card key={type}>
+              <CardContent className="pt-4 pb-3 px-4">
+                <p className="text-xl font-semibold">{count}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{type}</p>
+              </CardContent>
+            </Card>
+          ))}
           {topTypes.length < 3 && (
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Clock className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm font-medium">Avg Duration</span>
-                </div>
-                <p className="text-2xl font-bold text-orange-600">
-                  {stats.avgDuration}
-                </p>
+              <CardContent className="pt-4 pb-3 px-4">
+                <p className="text-xl font-semibold">{stats.avgDuration}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Avg Duration</p>
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* Search and Filter Section */}
-        <div className="mb-8 space-y-4">
-          <div className="flex gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search mock interviews by title or description..."
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline" size="default">
-              <Filter className="h-4 w-4 mr-2" />
-              Advanced Filters
-            </Button>
+        {/* Search */}
+        <div className="mb-6 space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search mock interviews..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10"
+            />
           </div>
 
-          {/* Dynamic Interview Type Filters */}
-          <div>
-            <p className="text-sm text-muted-foreground mb-2">
-              Filter by Interview Type:
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Badge
-                variant={activeFilter === "all" ? "default" : "outline"}
-                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                onClick={() => handleFilterChange("all")}
-              >
-                All Interviews ({stats.total})
-              </Badge>
-              {interviewTypes.map((type) => {
-                const count = stats.typeCount[type] || 0;
-                return (
-                  <Badge
-                    key={type}
-                    variant={activeFilter === type ? "default" : "secondary"}
-                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                    onClick={() => handleFilterChange(type)}
-                  >
-                    {type} ({count})
-                  </Badge>
-                );
-              })}
-            </div>
+          <div className="flex flex-wrap gap-1.5">
+            <Badge
+              variant={activeFilter === "all" ? "default" : "outline"}
+              className="cursor-pointer text-xs transition-colors"
+              onClick={() => handleFilterChange("all")}
+            >
+              All ({stats.total})
+            </Badge>
+            {interviewTypes.map((type) => {
+              const count = stats.typeCount[type] || 0;
+              return (
+                <Badge
+                  key={type}
+                  variant={activeFilter === type ? "default" : "secondary"}
+                  className="cursor-pointer text-xs transition-colors"
+                  onClick={() => handleFilterChange(type)}
+                >
+                  {type} ({count})
+                </Badge>
+              );
+            })}
           </div>
         </div>
 
-        {/* Results Summary */}
-        <div className="mb-6">
-          <p className="text-muted-foreground">
-            Showing {filteredInterviews.length} of {mockInterviewsData.length}{" "}
-            mock interviews
-            {searchTerm && <span> for "{searchTerm}"</span>}
-            {activeFilter !== "all" && <span> in {activeFilter}</span>}
-          </p>
-        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          {filteredInterviews.length} of {mockInterviewsData.length} interviews
+          {searchTerm && <span> for &ldquo;{searchTerm}&rdquo;</span>}
+          {activeFilter !== "all" && <span> in {activeFilter}</span>}
+        </p>
 
-        {/* Mock Interviews Grid */}
         {filteredInterviews.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {filteredInterviews.map((interview) => (
               <MockInterviewCard
                 key={interview.id}
@@ -321,16 +274,12 @@ export default function MockInterviewsListing() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <Play className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
-              No mock interviews found
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Try adjusting your search terms or filter criteria.
-            </p>
+          <div className="text-center py-16">
+            <Play className="h-8 w-8 text-muted-foreground/50 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground mb-3">No interviews found</p>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => {
                 handleSearch("");
                 handleFilterChange("all");
@@ -340,26 +289,6 @@ export default function MockInterviewsListing() {
             </Button>
           </div>
         )}
-
-        {/* Call to Action */}
-        <div className="mt-12 bg-primary/5 rounded-lg p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Ready to Practice?</h2>
-          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Mock interviews are a great way to prepare for real job interviews.
-            Get personalized feedback, improve your skills, and boost your
-            confidence.
-          </p>
-          <div className="flex justify-center gap-4">
-            <Button size="lg" className="flex items-center gap-2">
-              <Play className="h-5 w-5" />
-              Start Your First Mock Interview
-            </Button>
-            <Button variant="outline" size="lg">
-              Learn More About Mock Interviews
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </PageShell>
   );
 }

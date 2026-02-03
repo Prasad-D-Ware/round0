@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { PageShell } from "@/components/layout/page-shell";
+import { Badge } from "@/components/ui/badge";
 import {
   Plus,
   X,
@@ -135,21 +137,18 @@ export function CandidateProfileForm({
         {items.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {items.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
-              >
-                <span>{item}</span>
-                <Button
+              <Badge key={index} variant="secondary" className="gap-1 pr-1.5">
+                <span className="max-w-[20rem] truncate">{item}</span>
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                  className="ml-0.5 grid size-5 place-items-center rounded-full hover:bg-foreground/10"
                   onClick={() => handleArrayRemove(field, index)}
+                  aria-label={`Remove ${label}`}
+                  title={`Remove ${label}`}
                 >
                   <X className="h-3 w-3" />
-                </Button>
-              </div>
+                </button>
+              </Badge>
             ))}
           </div>
         )}
@@ -182,25 +181,23 @@ export function CandidateProfileForm({
   };
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="border-b bg-white mb-4">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Briefcase className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">
-              {isEditMode ? "Edit Your Profile" : "Complete Your Profile"}
-            </h1>
-          </div>
-          <p className="text-muted-foreground">
-            {isEditMode 
-              ? "Update your profile information to keep it current." 
-              : "Help recruiters learn more about you by completing your profile information."
-            }
-          </p>
-        </div>
-      </div>
-      <div className="max-w-5xl mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <PageShell
+      title={
+        <span className="flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-2xl bg-primary/10 ring-1 ring-inset ring-border/50">
+            <Briefcase className="h-5 w-5 text-primary" />
+          </span>
+          {isEditMode ? "Edit Your Profile" : "Complete Your Profile"}
+        </span>
+      }
+      description={
+        isEditMode
+          ? "Update your profile information to keep it current."
+          : "Help recruiters learn more about you by completing your profile information."
+      }
+      size="lg"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <Card>
             <CardHeader>
@@ -420,8 +417,7 @@ export function CandidateProfileForm({
               }
             </Button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </PageShell>
   );
 }

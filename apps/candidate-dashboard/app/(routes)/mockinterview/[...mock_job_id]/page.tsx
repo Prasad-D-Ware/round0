@@ -8,7 +8,7 @@ import { useParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner';
 
-const page = () => {
+export default function MockInterviewDetailPage() {
 	const params = useParams();
 	const mock_job_id = params.mock_job_id?.[0] as string;
 
@@ -34,13 +34,13 @@ const page = () => {
   return (
     <div>
       {isLoading ? (
-        <div className="flex justify-center items-center h-screen">
-          <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="flex justify-center items-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : mockInterviewDetailData ? (
         <MockInterviewDetail mockInterviewDetailData={mockInterviewDetailData} />
       ) : (
-        <div className="flex justify-center items-center h-screen">
+        <div className="flex justify-center items-center py-24">
           <div className="text-center">
             <p className="text-lg text-muted-foreground">Failed to load mock interview details</p>
             <p className="text-sm text-muted-foreground mt-2">Please try refreshing the page</p>
@@ -50,5 +50,3 @@ const page = () => {
     </div>
   )
 }
-
-export default page

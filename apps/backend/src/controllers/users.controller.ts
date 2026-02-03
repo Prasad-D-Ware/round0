@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import prisma from "../lib/prisma";
-import { USER_ROLE } from "@prisma/client";
+import { USER_ROLE } from "../../generated/enums";
 
 const getUser = async (req: Request, res: Response) => {
 	try {
