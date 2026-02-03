@@ -42,8 +42,8 @@ const InterviewVerification = () => {
 	return (
 		<>
 			{loading && (
-				<div className="flex justify-center items-center h-screen">
-					<Loader2 className="animate-spin" />
+				<div className="flex justify-center items-center h-screen app-surface">
+					<Loader2 className="animate-spin text-muted-foreground" />
 				</div>
 			)}
 		</>
@@ -54,8 +54,8 @@ const InterviewPage = () => {
 	return (
 		<Suspense
 			fallback={
-				<div className="flex justify-center items-center h-screen">
-					<Loader2 className="animate-spin" />
+				<div className="flex justify-center items-center h-screen app-surface">
+					<Loader2 className="animate-spin text-muted-foreground" />
 				</div>
 			}
 		>

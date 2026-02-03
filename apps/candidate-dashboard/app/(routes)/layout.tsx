@@ -1,15 +1,15 @@
 import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
-
-
+import { AppTopbar } from "@/components/app-topbar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="w-full">
-        {children}
-      </main>
+      <SidebarInset className="app-surface min-h-svh">
+        <AppTopbar />
+        <div className="flex-1 min-h-0">{children}</div>
+      </SidebarInset>
     </SidebarProvider>
   )
 }

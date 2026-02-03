@@ -1,4 +1,4 @@
-import { INTERVIEW_ROUND_TYPE } from "@prisma/client";
+import { INTERVIEW_ROUND_TYPE } from "../../generated/enums";
 
 export const getRoundSpecificInstructions = (
     roundType: INTERVIEW_ROUND_TYPE
