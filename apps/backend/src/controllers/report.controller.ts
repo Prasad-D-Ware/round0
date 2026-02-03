@@ -1,4 +1,4 @@
-import { USER_ROLE } from "@prisma/client";
+import { USER_ROLE } from "../../generated/enums";
 import type { Request, Response } from "express";
 import prisma from "../lib/prisma";
 import s3Service from "../services/s3-service";

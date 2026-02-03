@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import prisma from "../lib/prisma";
 import scoringEngine from "../services/scoring-engine";
-import { INTERVIEW_ROUND_STATUS } from "@prisma/client";
+import { INTERVIEW_ROUND_STATUS } from "../../generated/enums";
 import s3Service from "../services/s3-service";
 import axios from "axios";
 
