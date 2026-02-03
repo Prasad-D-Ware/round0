@@ -83,7 +83,7 @@ function AuthCallback() {
 						// localStorage.setItem("token",token);
 						setToken(token);
 						userData(insertData);
-						router.replace("/dashboard");
+						router.replace("/mockinterview");
 					}
 				}
 			}
@@ -102,18 +102,18 @@ export default function AuthCallbackPage() {
 }
 
 const CallbackLoader = () => (
-	<div className="flex justify-center items-center h-screen">
+	<div className="flex justify-center items-center min-h-screen app-surface">
 		<div className="flex gap-1">
 			<div
-				className="w-3 h-3 rounded-full bg-white animate-bounce text-black"
+				className="w-3 h-3 rounded-full bg-primary animate-bounce"
 				style={{ animationDelay: "0ms" }}
 			></div>
 			<div
-				className="w-3 h-3 rounded-full bg-white animate-bounce text-black"
+				className="w-3 h-3 rounded-full bg-primary animate-bounce"
 				style={{ animationDelay: "150ms" }}
 			></div>
 			<div
-				className="w-3 h-3 rounded-full bg-white animate-bounce text-black"
+				className="w-3 h-3 rounded-full bg-primary animate-bounce"
 				style={{ animationDelay: "300ms" }}
 			></div>
 		</div>

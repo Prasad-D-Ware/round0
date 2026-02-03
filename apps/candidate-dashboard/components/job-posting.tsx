@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Briefcase, Users } from "lucide-react";
+import { Search, Briefcase, Loader2 } from "lucide-react";
 import { JobCard } from "./job-card";
 import { useRouter } from "next/navigation";
 import { getAllJobs } from "@/api/operations/job-fetching-api";
 import { useAuthStore } from "@/stores/auth-store";
+import { PageShell } from "@/components/layout/page-shell";
 
 export interface JobPosting {
     id: string
@@ -30,26 +30,36 @@ export default function JobListings() {
     const [searchTerm, setSearchTerm] = useState("")
     const [jobData, setJobData] = useState<JobPosting[]>([]);
     const [filteredJobs, setFilteredJobs] = useState(jobData)
+    const [isLoading, setIsLoading] = useState(true)
     const { token } = useAuthStore();
 
     const router = useRouter();
 
     const fetchJobs = async () => {
-          const response = await getAllJobs(token as string);
-          if(!response?.success){
-            console.log(response?.message);
-            return;
+          try {
+            setIsLoading(true)
+            const response = await getAllJobs(token as string);
+            if(!response?.success){
+              console.log(response?.message);
+              return;
+            }
+            setJobData(response?.data);
+            setFilteredJobs(response?.data);
+          } catch (error) {
+            console.error('Error fetching jobs:', error)
+          } finally {
+            setIsLoading(false)
           }
-          setJobData(response?.data);
-          setFilteredJobs(response?.data);
     }
 
 	useEffect(() => {
     if(token){
         fetchJobs();
+    } else {
+        setIsLoading(false)
     }
 	}, [token]);
-  
+
     const handleSearch = (term: string) => {
       setSearchTerm(term)
       if (term.trim() === "") {
@@ -59,127 +69,64 @@ export default function JobListings() {
           const titleMatch = job.title.toLowerCase().includes(term.toLowerCase())
           const descriptionMatch = job.description.toLowerCase().includes(term.toLowerCase())
           const recruiterMatch = job.recruiter.name.toLowerCase().includes(term.toLowerCase())
-  
+
           return titleMatch || descriptionMatch || recruiterMatch
         })
         setFilteredJobs(filtered)
       }
     }
-  
+
     const handleApply = (jobId: string) => {
-      // Handle job application logic here
-    //   console.log(`Applying for job: ${jobId}`)
       router.push(`/jobs/${jobId}`)
     }
-  
-    const getUniqueRecruiters = () => {
-      const recruiters = jobData.map((job) => job.recruiter.name)
-      return [...new Set(recruiters)]
-    }
-  
-    const filterByRecruiter = (recruiterName: string) => {
-      const filtered = jobData.filter((job) => job.recruiter.name === recruiterName)
-      setFilteredJobs(filtered)
-      setSearchTerm(`Recruiter: ${recruiterName}`)
-    }
-  
-    const uniqueRecruiters = getUniqueRecruiters()
-  
-    return (
-      <div className="min-h-screen bg-background">
-        {/* Header */}
-        <div className="border-b bg-white">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Briefcase className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold">Round0</h1>
-            </div>
-            <p className="text-muted-foreground">Discover your next career opportunity from our curated job listings</p>
-          </div>
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-  
-        <div className="container mx-auto px-4 py-8 max-w-5xl">
-          {/* Search and Filter Section */}
-          <div className="mb-8 space-y-4">
-            <div className="flex gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search jobs by title, description, or recruiter..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              {/* <Button variant="outline" size="default">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button> */}
+      )
+    }
+
+    return (
+      <PageShell
+        title="Jobs"
+        description="Discover career opportunities from our curated listings."
+        size="lg"
+      >
+
+          {/* Search */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by title, description, or recruiter..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-10"
+              />
             </div>
-  
-            {/* Filter by Recruiters */}
-            {/* <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Filter by Recruiter:</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Badge
-                  variant="outline"
-                  className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                  onClick={() => {
-                    setFilteredJobs(jobData)
-                    setSearchTerm("")
-                  }}
-                >
-                  All Jobs ({jobData.length})
-                </Badge>
-                {uniqueRecruiters.map((recruiter, index) => {
-                  const jobCount = jobData.filter((job) => job.recruiter.name === recruiter).length
-                  return (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                      onClick={() => filterByRecruiter(recruiter)}
-                    >
-                      {recruiter} ({jobCount})
-                    </Badge>
-                  )
-                })}
-              </div>
-            </div> */}
           </div>
-  
-          {/* Results Summary */}
-          <div className="mb-6 flex items-center justify-between">
-            <p className="text-muted-foreground">
-              Showing {filteredJobs.length} of {jobData.length} jobs
-              {searchTerm && !searchTerm.startsWith("Recruiter:") && <span> for "{searchTerm}"</span>}
-            </p>
-            {filteredJobs.length > 0 && (
-              <p className="text-sm text-muted-foreground">
-                {filteredJobs.length} position{filteredJobs.length !== 1 ? "s" : ""} available
-              </p>
-            )}
-          </div>
-  
+
+          <p className="text-xs text-muted-foreground mb-4">
+            {filteredJobs.length} of {jobData.length} jobs
+            {searchTerm && <span> for &ldquo;{searchTerm}&rdquo;</span>}
+          </p>
+
           {/* Job Cards List */}
           {filteredJobs.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {filteredJobs.map((job) => (
                 <JobCard key={job.id} job={job} onViewJob={handleApply} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No jobs found</h3>
-              <p className="text-muted-foreground mb-4">
-                Try adjusting your search terms or browse all available positions.
-              </p>
+            <div className="text-center py-16">
+              <Briefcase className="h-8 w-8 text-muted-foreground/50 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground mb-3">No jobs found</p>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => {
                   handleSearch("")
                   setFilteredJobs(jobData)
@@ -189,7 +136,6 @@ export default function JobListings() {
               </Button>
             </div>
           )}
-        </div>
-      </div>
+      </PageShell>
     )
   }

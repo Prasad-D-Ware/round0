@@ -3,17 +3,10 @@
 import type React from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { Chrome, Loader2 } from "lucide-react";
 
 interface AuthComponentProps {
@@ -48,104 +41,105 @@ export default function Auth({
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-			<Card className="w-full max-w-md shadow-lg">
-				<CardHeader className="space-y-1 text-center">
-					<CardTitle className="text-2xl font-bold">
-						{isLogin ? "Welcome back" : "Create account"}
-					</CardTitle>
-					<CardDescription>
-						{isLogin
-							? "Sign in to your account to continue"
-							: "Sign up to get started with your account"}
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-4">
-					<Button
-						variant="outline"
-						className="w-full h-11 font-medium"
-						onClick={onGoogleAuth}
-					>
-						<Chrome className="mr-2 h-4 w-4" />
-						{isLogin ? "Continue with Google" : "Sign up with Google"}
-					</Button>
-
-					<div className="relative">
-						<div className="absolute inset-0 flex items-center">
-							<Separator className="w-full" />
+		<div className="min-h-screen app-surface flex items-center justify-center p-4">
+			<div className="w-full max-w-sm">
+				<Card className="py-0">
+					<CardContent className="p-6">
+						<div className="text-center mb-7">
+							<div className="h-10 w-10 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4 shadow-sm ring-1 ring-inset ring-white/10">
+								<span className="text-primary-foreground font-bold text-lg">R</span>
+							</div>
+							<h1 className="text-xl font-semibold tracking-tight">
+								{isLogin ? "Welcome back" : "Create account"}
+							</h1>
+							<p className="text-sm text-muted-foreground mt-1">
+								{isLogin
+									? "Sign in to continue to Round0."
+									: "Get started with Round0."}
+							</p>
 						</div>
-						<div className="relative flex justify-center text-xs uppercase">
-							<span className="bg-background px-2 text-muted-foreground">
-								Or {isLogin ? "continue" : "sign up"} with
-							</span>
-						</div>
-					</div>
 
-					<form className="space-y-4" onSubmit={handleSubmit}>
+						<div className="space-y-4">
+							<Button
+								variant="outline"
+								className="w-full h-10 text-sm font-medium"
+								onClick={onGoogleAuth}
+							>
+								<Chrome className="mr-2 h-4 w-4" />
+								{isLogin ? "Continue with Google" : "Sign up with Google"}
+							</Button>
+
+							<div className="relative">
+								<div className="absolute inset-0 flex items-center">
+									<Separator className="w-full" />
+								</div>
+								<div className="relative flex justify-center text-xs uppercase">
+									<span className="bg-background/60 px-2 text-muted-foreground backdrop-blur-sm rounded-full">
+										or
+									</span>
+								</div>
+							</div>
+
+							<form className="space-y-3" onSubmit={handleSubmit}>
 						{isSignup && (
-							<div className="space-y-2">
-								<Label htmlFor="name">Full Name</Label>
+							<div className="space-y-1.5">
+								<Label htmlFor="name" className="text-xs">Full Name</Label>
 								<Input
 									id="name"
 									name="name"
 									type="text"
 									placeholder="John Doe"
-									className="h-11"
 									required
 								/>
 							</div>
 						)}
 
-						<div className="space-y-2">
-							<Label htmlFor="email">Email</Label>
+						<div className="space-y-1.5">
+							<Label htmlFor="email" className="text-xs">Email</Label>
 							<Input
 								id="email"
 								name="email"
 								type="email"
 								placeholder="name@example.com"
-								className="h-11"
 								required
 							/>
 						</div>
 
-						<div className="space-y-2">
+						<div className="space-y-1.5">
 							<div className="flex items-center justify-between">
-								<Label htmlFor="password">Password</Label>
+								<Label htmlFor="password" className="text-xs">Password</Label>
 								{isLogin && (
-									<Button
+									<button
 										type="button"
-										variant="link"
-										className="px-0 font-normal text-sm h-auto"
+										className="text-xs text-muted-foreground hover:text-foreground transition-colors"
 										onClick={onForgotPassword}
 									>
 										Forgot password?
-									</Button>
+									</button>
 								)}
 							</div>
 							<Input
 								id="password"
 								name="password"
 								type="password"
-								className="h-11"
 								required
 								minLength={isSignup ? 8 : undefined}
 							/>
 						</div>
 
 						{isSignup && (
-							<div className="space-y-2">
-								<Label htmlFor="confirmPassword">Confirm Password</Label>
+							<div className="space-y-1.5">
+								<Label htmlFor="confirmPassword" className="text-xs">Confirm Password</Label>
 								<Input
 									id="confirmPassword"
 									name="confirmPassword"
 									type="password"
-									className="h-11"
 									required
 								/>
 							</div>
 						)}
 
-						<Button type="submit" className="w-full h-11 font-medium" disabled={isLoading}>
+						<Button type="submit" className="w-full h-10 text-sm font-medium mt-2" disabled={isLoading}>
 							{isLoading && isSignup ? (
 								<div className="flex items-center gap-2">
 									<Loader2 className="h-4 w-4 animate-spin" />
@@ -155,41 +149,29 @@ export default function Auth({
 								isLogin ? "Sign In" : "Create Account"
 							)}
 						</Button>
-					</form>
+							</form>
 
 					{isSignup && (
-						<p className="text-xs text-center text-muted-foreground">
+						<p className="text-[11px] text-center text-muted-foreground">
 							By creating an account, you agree to our{" "}
-							<Button
-								variant="link"
-								className="px-0 font-normal text-xs h-auto"
-							>
-								Terms of Service
-							</Button>{" "}
-							and{" "}
-							<Button
-								variant="link"
-								className="px-0 font-normal text-xs h-auto"
-							>
-								Privacy Policy
-							</Button>
+							<span className="underline cursor-pointer">Terms</span> and{" "}
+							<span className="underline cursor-pointer">Privacy Policy</span>
 						</p>
 					)}
-				</CardContent>
 
-				<CardFooter className="flex flex-col space-y-4">
-					<div className="text-center text-sm text-muted-foreground">
+					<p className="text-center text-sm text-muted-foreground pt-2">
 						{isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-						<Button
-							variant="link"
-							className="px-0 font-normal h-auto"
+						<button
+							className="text-foreground font-medium hover:underline"
 							onClick={() => onModeChange?.(isLogin ? "signup" : "login")}
 						>
 							{isLogin ? "Sign up" : "Sign in"}
-						</Button>
-					</div>
-				</CardFooter>
-			</Card>
+						</button>
+					</p>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
 		</div>
 	);
 }

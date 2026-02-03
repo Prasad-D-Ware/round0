@@ -1,10 +1,10 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ApplicationStatusBadge } from "./application-status-badge"
-import { Calendar, Target, TrendingUp, Eye, MessageCircle } from "lucide-react"
+import { Calendar, Eye, MessageCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export interface MockJobDetail {
@@ -90,28 +90,6 @@ export function AttemptCard({ attempt, attemptNumber, onViewDetails }: AttemptCa
     return "text-red-600"
   }
 
-  const getScoreBadgeColor = (score: number) => {
-    if (score >= 80) return "bg-green-100 text-green-800 border-green-200"
-    if (score >= 60) return "bg-yellow-100 text-yellow-800 border-yellow-200"
-    if (score >= 40) return "bg-orange-100 text-orange-800 border-orange-200"
-    return "bg-red-100 text-red-800 border-red-200"
-  }
-
-  const getRoundTypeColor = (roundType: string) => {
-    switch (roundType.toLowerCase()) {
-      case "skill_assessment":
-        return "bg-blue-50 text-blue-700 border-blue-200"
-      case "behavioural":
-        return "bg-purple-50 text-purple-700 border-purple-200"
-      case "technical":
-        return "bg-green-50 text-green-700 border-green-200"
-      case "hr":
-        return "bg-orange-50 text-orange-700 border-orange-200"
-      default:
-        return "bg-gray-50 text-gray-700 border-gray-200"
-    }
-  }
-
   const totalRounds = attempt.interview_session.reduce((total, session) => total + session.interview_round.length, 0)
   const averageScore =
     totalRounds > 0
@@ -125,83 +103,68 @@ export function AttemptCard({ attempt, attemptNumber, onViewDetails }: AttemptCa
       : 0
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <CardTitle className="text-lg">Attempt #{attemptNumber}</CardTitle>
-              <ApplicationStatusBadge status={attempt.status} />
-              {averageScore > 0 && (
-                <Badge className={`text-xs ${getScoreBadgeColor(averageScore)}`}>Score: {averageScore}%</Badge>
-              )}
+    <Card>
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-medium">Attempt #{attemptNumber}</h4>
+            <ApplicationStatusBadge status={attempt.status} />
+            {averageScore > 0 && (
+              <Badge variant="outline" className="text-[10px]">{averageScore}%</Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              <span>{formatDate(attempt.created_at)}</span>
             </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                <span>{formatDate(attempt.created_at)}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Target className="h-4 w-4" />
-                <span>
-                  {totalRounds} Round{totalRounds !== 1 ? "s" : ""}
-                </span>
-              </div>
-            </div>
+            <span>{totalRounds} round{totalRounds !== 1 ? "s" : ""}</span>
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className="space-y-4">
         {/* Interview Rounds */}
-        {attempt.interview_session.map((session, sessionIndex) => (
-          <div key={session.id} className="space-y-3">
-            {session.interview_round.map((round, roundIndex) => (
-              <div key={round.id} className="bg-muted/30 rounded-lg p-4">
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div className="flex items-center gap-3">
-                    <Badge className={`text-xs ${getRoundTypeColor(round.round_type)}`}>
-                      Round {round.round_number}:{" "}
-                      {round.round_type.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                    </Badge>
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className={`h-4 w-4 ${getScoreColor(round.zero_score)}`} />
-                      <span className={`text-sm font-semibold ${getScoreColor(round.zero_score)}`}>
-                        {round.zero_score}%
-                      </span>
+        <div className="space-y-2 mb-3">
+          {attempt.interview_session.map((session) => (
+            <div key={session.id} className="space-y-2">
+              {session.interview_round.map((round) => (
+                <div key={round.id} className="bg-muted/30 rounded-lg p-3">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-[10px]">
+                        R{round.round_number}: {round.round_type.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                      </Badge>
                     </div>
+                    <span className={`text-xs font-medium ${getScoreColor(round.zero_score)}`}>
+                      {round.zero_score}%
+                    </span>
                   </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{round.ai_summary}</p>
                 </div>
+              ))}
+            </div>
+          ))}
+        </div>
 
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">AI Feedback:</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{round.ai_summary}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ))}
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-2 border-t">
+        {/* Actions */}
+        <div className="flex gap-2 pt-3 border-t border-border/50">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => onViewDetails(attempt.interview_session[0].interview_round[0].id)}
-            className="flex items-center gap-2"
+            className="text-xs h-7"
           >
-            <Eye className="h-4 w-4" />
-            View Details
+            <Eye className="h-3 w-3 mr-1" />
+            Details
           </Button>
           {attempt.status === "completed" && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={handleDiscussWithMentor}
-              className="flex items-center gap-2"
+              className="text-xs h-7"
             >
-              <MessageCircle className="h-4 w-4" />
-              Discuss with Mentor
+              <MessageCircle className="h-3 w-3 mr-1" />
+              Discuss
             </Button>
           )}
         </div>

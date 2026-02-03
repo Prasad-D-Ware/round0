@@ -4,7 +4,6 @@ import {
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "./ui/resizable";
-import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import {
 	Camera,
@@ -17,6 +16,9 @@ import {
 	Server,
 	Bot,
 	CodeXml,
+	MessageSquare,
+	Loader2,
+	Star,
 } from "lucide-react";
 import { LiveTranscript } from "./live-transcript";
 import { useConversationContext } from "../context/conversation-context";
@@ -27,15 +29,11 @@ import { toast } from "sonner";
 import CodeIDE from "./code-ide";
 import { useInterviewTokenPayloadStore } from "@/stores/interview-token-payload-store";
 
-// Dynamic import for Excalidraw to handle SSR
 const ExcalidrawWrapper = dynamic(() => import("./excalidraw-wrapper"), {
 	ssr: false,
 	loading: () => (
-		<div className="h-full w-full flex items-center justify-center bg-gray-50">
-			<div className="text-center">
-				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-				<p className="text-gray-600">Loading Excalidraw...</p>
-			</div>
+		<div className="h-full w-full flex items-center justify-center bg-muted">
+			<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
 		</div>
 	),
 });
@@ -85,9 +83,7 @@ const JoinInterview = ({
 	const hasWhiteboard = availableTools.includes("whiteboard");
 
 	const [showTranscript, setShowTranscript] = useState(true);
-	const [microphoneMode, setMicrophoneMode] = useState<
-		"push-to-talk" | "continuous"
-	>("continuous");
+	const [microphoneMode, setMicrophoneMode] = useState<"push-to-talk" | "continuous">("continuous");
 	const [showExcalidraw, setShowExcalidraw] = useState(false);
 	const excalidrawRef = useRef<ExcalidrawRef>(null);
 	const [canvasData, setCanvasData] = useState<any>(null);
@@ -96,24 +92,16 @@ const JoinInterview = ({
 	const [rating, setRating] = useState(0);
 
 	useEffect(() => {
-		// Auto-connect when component mounts
 		if (status === "disconnected") {
 			connect();
 		}
 	}, [connect, status]);
 
 	useEffect(() => {
-		console.log("status", status);
-	}, [status]);
-
-	// Update the useEffect to handle the new tool names WITH DEBUG LOGGING
-	useEffect(() => {
-		console.log('🔄 currentTool changed:', currentTool);
 		if (currentTool) {
 			switch (currentTool.tool) {
 				case "code_editor":
 					if (hasCodeEditor) {
-						console.log('🔧 Opening code editor...');
 						setShowCodeEditor(true);
 						setShowExcalidraw(false);
 					}
@@ -121,50 +109,34 @@ const JoinInterview = ({
 				case "whiteboard":
 				case "system_design_evaluator":
 					if (hasWhiteboard) {
-						console.log('🎨 Opening system design whiteboard...');
 						setShowExcalidraw(true);
 						setShowCodeEditor(false);
 					}
-					break;
-				default:
-					console.log('❓ Unknown tool:', currentTool.tool);
 					break;
 			}
 		}
 	}, [currentTool, hasCodeEditor, hasWhiteboard]);
 
-	// Add a new useEffect to handle automatic interview completion
 	useEffect(() => {
-		// Listen for messages that indicate interview completion
 		const lastMessage = messages[messages.length - 1];
 		if (lastMessage?.type === 'tool_result' && lastMessage.content?.tool_result === 'complete_interview') {
-			// Handle UI changes for interview completion
 			toast.success("Interview completed by AI agent");
-			// You might want to show a completion overlay or disable controls
 		}
 	}, [messages]);
 
-	// Add this useEffect to handle agent-initiated completion
 	useEffect(() => {
-		// Check for system messages indicating interview completion
 		const lastMessage = messages[messages.length - 1];
-		if (lastMessage?.role === 'system' && 
+		if (lastMessage?.role === 'system' &&
 			lastMessage.content?.text?.includes('Interview completed by AI agent')) {
-			// Show completion notification
 			toast.success("Interview completed by AI interviewer");
-			
-			// Optionally disable controls or show completion UI
-			// You could set a state here to show different UI
 		}
 	}, [messages]);
 
 	const handleMicrophoneToggle = () => {
 		if (microphoneMode === "continuous") {
 			if (isMicOn) {
-				// When muting, stop recording which will mute the ElevenLabs microphone
 				stopRecording();
 			} else {
-				// When unmuting, start recording which will unmute the ElevenLabs microphone
 				startRecording();
 			}
 		}
@@ -178,47 +150,22 @@ const JoinInterview = ({
 
 	const handleExcalidrawToggle = () => {
 		setShowExcalidraw(!showExcalidraw);
-		// Close code editor when opening excalidraw
-		if (!showExcalidraw) {
-			setShowCodeEditor(false);
-		}
+		if (!showExcalidraw) setShowCodeEditor(false);
 	};
 
 	const token = localStorage.getItem("interview_token");
 
 	const handleSubmitForEvaluation = async () => {
 		try {
-			if (!excalidrawRef.current) {
-				console.error("Excalidraw reference not available");
-				return;
-			}
-
-			// console.log("Exporting canvas as image...");
+			if (!excalidrawRef.current) return;
 			const imageBlob = await excalidrawRef.current.exportAsImage();
-
 			if (imageBlob) {
-				// console.log("Canvas exported successfully:", imageBlob);
-
-				const formData = new FormData();
-				formData.append("canvasImage", imageBlob, "excalidraw-canvas.png");
-
-				formData.append("timestamp", new Date().toISOString());
-				formData.append("interviewId", roundId);
-				formData.append(
-					"question",
-					"Design a System Design for user authentication"
-				);
-
-				// console.log(canvasData);
-
 				const reader = new FileReader();
-
 				reader.onloadend = async () => {
 					const base64Image = reader.result as string;
-					// console.log("Base64 image:", base64Image);
 					const response = await evaluateCanvas(
 						roundId,
-						"Design a System Design for user authentication", //TODO give actual question that is asked
+						"Design a System Design for user authentication",
 						base64Image,
 						token as string,
 						canvasData
@@ -226,8 +173,6 @@ const JoinInterview = ({
 					toast.success(response?.message);
 				};
 				reader.readAsDataURL(imageBlob);
-			} else {
-				console.error("Failed to export canvas as image");
 			}
 		} catch (error) {
 			console.error("Error submitting for evaluation:", error);
@@ -236,10 +181,7 @@ const JoinInterview = ({
 
 	const handleCodeEditorToggle = () => {
 		setShowCodeEditor(!showCodeEditor);
-		// Close excalidraw when opening code editor
-		if (!showCodeEditor) {
-			setShowExcalidraw(false);
-		}
+		if (!showCodeEditor) setShowExcalidraw(false);
 	};
 
 	const handleSubmitFeedback = async () => {
@@ -247,22 +189,15 @@ const JoinInterview = ({
 			toast.error("Please provide some feedback before submitting");
 			return;
 		}
-
 		try {
-			const feedbackContent = {
+			await submitStructuredFeedback({
 				text: feedbackText,
 				rating: rating,
 				feedback_type: 'interview_experience'
-			};
-
-			await submitStructuredFeedback(feedbackContent);
+			});
 			toast.success("Thank you for your feedback!");
-			
-			// Clear feedback form
 			setFeedbackText("");
 			setRating(0);
-			
-			// Delay finishing to allow the user to see the thank you message
 			setTimeout(() => {
 				finishFeedbackAndEndInterview();
 			}, 2000);
@@ -277,74 +212,100 @@ const JoinInterview = ({
 		finishFeedbackAndEndInterview();
 	};
 
-	const renderTool = () => {
-		if (!currentTool) return null;
+	const ControlButton = ({
+		active,
+		destructive,
+		onClick,
+		disabled,
+		children,
+		className = "",
+	}: {
+		active?: boolean;
+		destructive?: boolean;
+		onClick: () => void;
+		disabled?: boolean;
+		children: React.ReactNode;
+		className?: string;
+	}) => (
+		<button
+			onClick={onClick}
+			disabled={disabled}
+			className={`
+				h-12 w-12 rounded-full flex items-center justify-center transition-all duration-150
+				${destructive
+					? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+					: active
+						? "bg-foreground text-background hover:opacity-90"
+						: "bg-muted/80 text-foreground hover:bg-muted"
+				}
+				disabled:opacity-40 disabled:cursor-not-allowed
+				${className}
+			`}
+		>
+			{children}
+		</button>
+	);
 
-		switch (currentTool.tool) {
-			case "code_editor":
-				return <CodeIDE tool={currentTool} />;
-			case "whiteboard":
-			case "system_design_evaluator":
-				return <ExcalidrawWrapper tool={currentTool} />;
-			default:
-				return (
-					<Card className="h-full">
-						<CardContent className="p-6">
-							<p>Unknown tool: {currentTool.tool}</p>
-						</CardContent>
-					</Card>
-				);
-		}
-	};
-
-	const renderMainContent = () => {
-		return (
-			<Card className="h-full">
-				<CardContent className="h-full flex flex-col">
-					{/* Video section */}
-					<div className="flex-[4] min-h-0">
-						<div className="relative bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg overflow-hidden border h-full">
-							{/* Main content area - AI Avatar OR Excalidraw OR CodeIDE */}
+	return (
+		<div className="h-screen dark interview-surface text-white">
+			<ResizablePanelGroup direction="horizontal" className="h-full">
+				{/* Main panel */}
+				<ResizablePanel defaultSize={showTranscript ? 75 : 100} minSize={50}>
+					<div className="h-full flex flex-col relative">
+						{/* Main content area */}
+						<div className="flex-1 min-h-0 relative">
 							{showCodeEditor && hasCodeEditor ? (
-								/* CodeIDE replaces the AI avatar area */
 								<div className="w-full h-full">
-									<CodeIDE tool={currentTool}/>
+									<CodeIDE tool={currentTool} />
 								</div>
 							) : showExcalidraw && hasWhiteboard ? (
-								/* Excalidraw replaces only the AI avatar area */
-								<div className="w-full h-full">
+								<div className="w-full h-full relative">
 									<ExcalidrawWrapper
 										ref={excalidrawRef}
 										onClose={() => setShowExcalidraw(false)}
 										setCanvasData={setCanvasData}
 										tool={currentTool}
 									/>
+									{/* Submit evaluation button */}
+									<div className="absolute bottom-20 right-6 z-20">
+										<Button
+											onClick={handleSubmitForEvaluation}
+											className="flex items-center gap-2 shadow-lg"
+											size="lg"
+										>
+											<Bot className="h-4 w-4" />
+											Submit for Evaluation
+										</Button>
+									</div>
 								</div>
 							) : (
-								/* AI Interviewer placeholder */
-								<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+								/* AI Interviewer */
+								<div className="w-full h-full flex items-center justify-center">
 									<div className="text-center">
-										<div className="w-32 h-32 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-											<div className="text-4xl">🤖</div>
+										{/* Animated pulse ring */}
+										<div className="relative mx-auto mb-6">
+											<div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
+												<div className={`w-16 h-16 rounded-full bg-primary/30 flex items-center justify-center ${isConnected ? 'animate-pulse' : ''}`}>
+													<Bot className="h-8 w-8 text-primary" />
+												</div>
+											</div>
+											{isConnected && (
+												<div className="absolute inset-0 w-24 h-24 mx-auto rounded-full border-2 border-primary/20 animate-ping" />
+											)}
 										</div>
-										<h3 className="text-lg font-semibold text-primary">
-											Round0 AI Interviewer
+										<h3 className="text-lg font-medium text-white/90">
+											Round0 AI
 										</h3>
-										{/* <p className="text-sm text-muted-foreground mt-2">
-											{status === "connected"
-												? "Connected"
-												: status === "connecting"
-													? "Connecting..."
-													: status === "error"
-														? "Connection Error"
-														: "Disconnected"}
-										</p> */}
+										<div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-xs text-white/60">
+											<div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
+											{isConnected ? "Connected" : "Connecting..."}
+										</div>
 									</div>
 								</div>
 							)}
 
-							{/* Candidate video overlay - ALWAYS VISIBLE */}
-							<div className="absolute bottom-4 left-4 w-64 h-48 rounded-lg overflow-hidden border-2 border-white shadow-lg bg-muted z-10">
+							{/* Candidate video overlay */}
+							<div className="absolute bottom-4 right-4 w-48 h-36 rounded-2xl overflow-hidden interview-panel shadow-2xl z-10">
 								{isCameraOn ? (
 									<video
 										ref={videoRef}
@@ -354,258 +315,147 @@ const JoinInterview = ({
 										className="w-full h-full object-cover"
 									/>
 								) : (
-									<div className="w-full h-full bg-muted flex items-center justify-center">
-										<div className="text-center">
-											<div className="w-16 h-16 bg-muted-foreground/20 rounded-full flex items-center justify-center mx-auto mb-2">
-												<Camera className="w-8 h-8 text-muted-foreground" />
-											</div>
-											<p className="text-sm text-muted-foreground">
-												Camera Off
-											</p>
-										</div>
+									<div className="w-full h-full flex items-center justify-center">
+										<Camera className="w-6 h-6 text-white/30" />
 									</div>
 								)}
-
-								{/* Candidate label */}
-								<div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white px-3 py-1">
+								<div className="absolute bottom-0 left-0 right-0 px-2.5 py-1.5 bg-gradient-to-t from-black/65 to-transparent">
 									<div className="flex items-center justify-between">
-										<span className="text-sm font-medium">You</span>
-										<div className="flex items-center gap-1">
-											{isMicOn ? (
-												<Mic
-													className={`w-3 h-3 ${isRecording ? "text-red-400 animate-pulse" : "text-green-400"}`}
-												/>
-											) : (
-												<MicOff className="w-3 h-3 text-red-400" />
-											)}
-										</div>
+										<span className="text-[11px] text-white/80 font-medium">You</span>
+										{isMicOn ? (
+											<Mic className={`w-3 h-3 ${isRecording ? "text-red-400 animate-pulse" : "text-emerald-400"}`} />
+										) : (
+											<MicOff className="w-3 h-3 text-red-400" />
+										)}
 									</div>
 								</div>
 							</div>
+						</div>
 
-							{/* Recording indicator - ALWAYS VISIBLE */}
-							{/* <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium z-10">
-								<div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-								Live Interview
-							</div> */}
-
-							{/* Connection status - ALWAYS VISIBLE */}
-							{/* <div className="absolute top-4 left-4 z-10">
-								<div
-									className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-										isConnected
-											? "bg-green-500 text-white"
-											: "bg-yellow-500 text-white"
-									}`}
-								>
-									<div
-										className={`w-2 h-2 rounded-full ${
-											isConnected ? "bg-white" : "bg-white animate-pulse"
-										}`}
-									/>
-									{isConnected ? "AI Connected" : "Connecting..."}
-								</div>
-							</div> */}
-
-							{/* Enhanced Excalidraw indicator and submit button */}
-							{showExcalidraw && (
-								<div className="absolute bottom-20 right-6 z-20 flex flex-col items-end gap-3">
-									{/* Status indicator
-									<div className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-										<Server className="h-4 w-4 inline mr-2" />
-										Whiteboard Active
-									</div> */}
-									
-									{/* Submit button */}
-									<Button
-										onClick={handleSubmitForEvaluation}
-										className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-110 px-6 py-4 rounded-full border-2 border-white"
-										size="lg"
+						{/* Controls bar */}
+						<div className="absolute bottom-0 left-0 right-0 z-20">
+							<div className="flex justify-center pb-6 pt-16 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent">
+								<div className="flex items-center gap-3 px-6 py-3 rounded-2xl interview-panel">
+									<ControlButton
+										active={isCameraOn}
+										onClick={toggleCamera}
+										disabled={isUploading}
 									>
-										<Bot className="h-6 w-6" />
-										Submit for Evaluation
-									</Button>
+										{isCameraOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+									</ControlButton>
+
+									<ControlButton
+										active={isMicOn}
+										onClick={handleMicrophoneToggle}
+										disabled={isUploading}
+									>
+										{isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+									</ControlButton>
+
+									<ControlButton
+										onClick={() => changeLanguage(language === "en" ? "hi" : "en")}
+										disabled={isUploading}
+									>
+										<Globe className="w-5 h-5" />
+									</ControlButton>
+
+									{hasWhiteboard && (
+										<ControlButton
+											active={showExcalidraw}
+											onClick={handleExcalidrawToggle}
+											disabled={isUploading}
+										>
+											<Server className="w-5 h-5" />
+										</ControlButton>
+									)}
+
+									{hasCodeEditor && (
+										<ControlButton
+											active={showCodeEditor}
+											onClick={handleCodeEditorToggle}
+											disabled={isUploading}
+										>
+											<CodeXml className="w-5 h-5" />
+										</ControlButton>
+									)}
+
+									<ControlButton
+										active={showTranscript}
+										onClick={() => setShowTranscript(!showTranscript)}
+										disabled={isUploading}
+									>
+										<MessageSquare className="w-5 h-5" />
+									</ControlButton>
+
+									<div className="w-px h-8 bg-white/10 mx-1" />
+
+									<ControlButton
+										destructive
+										onClick={handleLeaveInterview}
+										disabled={isUploading}
+										className="h-12 w-14"
+									>
+										{isUploading ? (
+											<Loader2 className="w-5 h-5 animate-spin" />
+										) : (
+											<PhoneOff className="w-5 h-5" />
+										)}
+									</ControlButton>
 								</div>
-							)}
+							</div>
 						</div>
+
+						{/* Feedback overlay */}
+						{isCollectingFeedback && (
+							<div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+								<div className="interview-panel rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl">
+									<h3 className="text-lg font-semibold mb-2">How was your interview?</h3>
+									<p className="text-sm text-white/70 mb-6">
+										Your feedback helps us improve the experience.
+									</p>
+
+									{/* Star rating */}
+									<div className="flex gap-1 mb-4">
+										{[1, 2, 3, 4, 5].map((star) => (
+											<button
+												key={star}
+												onClick={() => setRating(star)}
+												className="p-1 transition-colors"
+											>
+												<Star
+													className={`h-6 w-6 ${star <= rating ? "fill-primary text-primary" : "text-muted-foreground/30"}`}
+												/>
+											</button>
+										))}
+									</div>
+
+									<textarea
+										value={feedbackText}
+										onChange={(e) => setFeedbackText(e.target.value)}
+										placeholder="Share your thoughts about the interview experience..."
+										className="w-full p-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/40 resize-none focus:outline-none focus:ring-2 focus:ring-white/15 min-h-[100px]"
+									/>
+
+									<div className="flex gap-3 mt-4">
+										<Button onClick={handleSubmitFeedback} className="flex-1">
+											Submit Feedback
+										</Button>
+										<Button variant="outline" onClick={handleSkipFeedback}>
+											Skip
+										</Button>
+									</div>
+								</div>
+							</div>
+						)}
 					</div>
-
-					{/* Controls section - ALWAYS VISIBLE AND UNCHANGED */}
-					<div className="flex-1 min-h-0 flex flex-col justify-center space-y-4 mt-4 border rounded-xl p-4">
-						{/* Interview controls */}
-						<div className="flex justify-center gap-3">
-							<Button
-								variant={isCameraOn ? "secondary" : "destructive"}
-								onClick={toggleCamera}
-								size="lg"
-								className="rounded-full w-14 h-14 p-0"
-								disabled={isUploading}
-							>
-								{isCameraOn ? (
-									<Video className="w-6 h-6" />
-								) : (
-									<VideoOff className="w-6 h-6" />
-								)}
-							</Button>
-
-							<Button
-								variant={isMicOn ? "secondary" : "destructive"}
-								onClick={handleMicrophoneToggle}
-								size="lg"
-								className="rounded-full w-14 h-14 p-0"
-								disabled={isUploading}
-							>
-								{isMicOn ? (
-									<Mic className="w-6 h-6" />
-								) : (
-									<MicOff className="w-6 h-6" />
-								)}
-							</Button>
-
-							<Button
-								variant="outline"
-								onClick={() => changeLanguage(language === "en" ? "hi" : "en")}
-								size="lg"
-								className="rounded-full w-14 h-14 p-0"
-								disabled={isUploading}
-							>
-								<Globe className="w-6 h-6" />
-							</Button>
-
-							{hasWhiteboard && (
-								<Button
-									variant={showExcalidraw ? "default" : "outline"}
-									onClick={handleExcalidrawToggle}
-									size="lg"
-									className="rounded-full w-14 h-14 p-0"
-									disabled={isUploading}
-								>
-									<Server className="w-6 h-6" />
-								</Button>
-							)}
-
-							{hasCodeEditor && (
-								<Button
-									variant={showCodeEditor ? "default" : "outline"}
-									onClick={handleCodeEditorToggle}
-									size="lg"
-									className="rounded-full w-14 h-14 p-0"
-									disabled={isUploading}
-								>
-									<CodeXml className="w-6 h-6" />
-								</Button>
-							)}
-
-							<Button
-								variant="outline"
-								onClick={() => setShowTranscript(!showTranscript)}
-								size="lg"
-								className="rounded-full w-14 h-14 p-0"
-								disabled={isUploading}
-							>
-								💬
-							</Button>
-
-							<Button
-								variant="destructive"
-								onClick={handleLeaveInterview}
-								size="lg"
-								className="rounded-full w-14 h-14 p-0"
-								disabled={isUploading}
-							>
-								{isUploading ? (
-									<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-								) : (
-									<PhoneOff className="w-6 h-6" />
-								)}
-							</Button>
-						</div>
-
-						{/* Status bar */}
-						<div className="flex justify-center gap-6 text-sm text-muted-foreground border-t pt-3">
-							<div className="flex items-center gap-2">
-								<div
-									className={`w-2 h-2 rounded-full ${isCameraOn ? "bg-green-500" : "bg-red-500"}`}
-								/>
-								<span>Camera {isCameraOn ? "On" : "Off"}</span>
-							</div>
-							<div className="flex items-center gap-2">
-								<div
-									className={`w-2 h-2 rounded-full ${isMicOn ? "bg-green-500" : "bg-red-500"}`}
-								/>
-								<span>Microphone {isMicOn ? "On" : "Off"}</span>
-							</div>
-							{/* <div className="flex items-center gap-2">
-								<div
-									className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-yellow-500"} ${!isConnected ? "animate-pulse" : ""}`}
-								/>
-								<span>AI {isConnected ? "Connected" : "Connecting"}</span>
-							</div> */}
-							<div className="flex items-center gap-2">
-								<Globe className="w-3 h-3" />
-								<span>{language === "en" ? "English" : "हिंदी"}</span>
-							</div>
-							{showExcalidraw && (
-								<div className="flex items-center gap-2">
-									<Server className="w-3 h-3" />
-									<span>Whiteboard Active</span>
-								</div>
-							)}
-							{showCodeEditor && (
-								<div className="flex items-center gap-2">
-									<CodeXml className="w-3 h-3" />
-									<span>Code Editor Active</span>
-								</div>
-							)}
-							{isCollectingFeedback && (
-								<div className="flex items-center gap-2 text-blue-500">
-									<div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-									<span>Feedback Mode</span>
-								</div>
-							)}
-							{isUploading && (
-								<div className="flex items-center gap-2 text-yellow-500">
-									<div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-500"></div>
-									<span>Ending Interview...</span>
-								</div>
-							)}
-						</div>
-					</div>
-				</CardContent>
-			</Card>
-		);
-	};
-
-
-
-	return (
-		<div className="h-screen bg-background">
-			<ResizablePanelGroup direction="horizontal" className="h-full">
-				{/* Main video panel */}
-				<ResizablePanel defaultSize={currentTool ? 50 : 80} minSize={40}>
-					<div className="h-full p-4">{renderMainContent()}</div>
 				</ResizablePanel>
-
-				{/* Tool panel (conditional) */}
-				{/* {currentTool && (
-					<>
-						<ResizableHandle withHandle />
-						<ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
-							<div className="h-full p-4 pl-3">{renderTool()}</div>
-						</ResizablePanel>
-					</>
-				)} */}
 
 				{/* Transcript panel */}
 				{showTranscript && (
 					<>
 						<ResizableHandle withHandle />
-						<ResizablePanel
-							defaultSize={currentTool ? 20 : 20}
-							minSize={15}
-							maxSize={40}
-						>
-							<div className="h-full p-4 pl-3 pr-3">
+						<ResizablePanel defaultSize={25} minSize={15} maxSize={40}>
+							<div className="h-full">
 								<LiveTranscript />
 							</div>
 						</ResizablePanel>
